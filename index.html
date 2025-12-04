@@ -1,46 +1,136 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Anonymous Feedback Wall</title>
-<style>
-  body { font-family: "Segoe UI", sans-serif; margin:0; padding:0; background:#f1f1f1; transition: background 0.4s, color 0.4s; }
-  .dark { background:#121212; color:#e4e4e4; }
-  #container { max-width:600px; margin:40px auto; padding:20px; }
-  #messages { display:flex; flex-direction:column; gap:12px; margin-bottom:70px; }
-  .msg { display:flex; align-items:flex-start; padding:10px 14px; border-radius:14px; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
-  .dark .msg { background:#1e1e1e; }
-  .avatar { width:40px; height:40px; border-radius:50%; background:#888; margin-right:10px; }
-  #inputBox { position:fixed; bottom:0; left:0; right:0; padding:12px; background:white; box-shadow:0 -2px 5px rgba(0,0,0,0.2); }
-  .dark #inputBox { background:#1e1e1e; }
-  #feedbackInput { width:80%; padding:12px; border-radius:20px; border:none; outline:none; }
-  #submitBtn { padding:12px 18px; border:none; border-radius:20px; background:#2a72ff; color:white; cursor:pointer; margin-left:8px; }
-  #toggleTheme { position:fixed; top:20px; right:20px; cursor:pointer; padding:10px; border-radius:8px; background:#ddd; }
-  .dark #toggleTheme { background:#333; color:white; }
-  @keyframes fade { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:translateY(0);} }
-  .fade-in { animation: fade 0.4s ease; }
-  @keyframes themeSwitch { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
-  .spin { animation: themeSwitch 0.5s linear; }
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anonymous Feedback — Bubble Wall</title>
+  <style>
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220cc;
+      --accent:#7dd3fc;
+      --muted:#94a3b8;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
+    body{
+      background: radial-gradient(ellipse at 20% 20%, rgba(125,211,252,0.06), transparent 10%),
+                  radial-gradient(ellipse at 80% 80%, rgba(167,139,250,0.04), transparent 10%),
+                  var(--bg);
+      color: #e6eef8;
+      overflow:hidden;
+    }
+
+    /* Site layout */
+    .app{
+      position:relative;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:48px 24px;
+      box-sizing:border-box;
+      z-index: 1;
+    }
+
+    .panel{
+      position:relative;
+      width:min(920px,96%);
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border:1px solid rgba(255,255,255,0.03);
+      border-radius:16px;
+      padding:22px;
+      backdrop-filter: blur(6px) saturate(120%);
+      box-shadow: 0 10px 30px rgba(2,6,23,0.6);
+      z-index: 1;
+    }
+
+    header{display:flex;align-items:center;gap:12px}
+    header h1{margin:0;font-size:20px}
+    header p{margin:0;color:var(--muted);font-size:13px}
+
+    form{margin-top:16px;display:flex;gap:12px}
+    textarea{flex:1;min-height:84px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;resize:vertical}
+    .controls{display:flex;flex-direction:column;gap:8px}
+    button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:#04263a;cursor:pointer;font-weight:600}
+    .muted-btn{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+
+    .meta{margin-top:12px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between}
+
+    /* Bubble background container (covers full viewport) */
+    .bubble-layer{
+      position: static;inset:0;pointer-events:none;z-index: 1;overflow:hidden;
+    }
+
+    .bubble{
+      position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;
+      padding:12px;border-radius:999px;max-width:360px;min-width:60px;white-space:nowrap;
+      transform-origin:center center;opacity: 1;backdrop-filter: blur(4px);
+      color:rgba(2,6,23,0.9);font-weight:600;font-size:13px;line-height:1.1;
+      box-shadow:0 6px 18px rgba(2,6,23,0.45);
+      pointer-events:auto; /* so hover works */
+      transition:transform 400ms ease, opacity 400ms ease;
+      cursor:default;
+    }
+    .bubble:hover{transform:scale(1.06);opacity:1}
+    .bubble .full{display:none}
+    .bubble:hover .trunc{display:none}
+    .bubble:hover .full{display:block;position:absolute;left:12px;right:12px}
+
+    /* Colors for bubbles */
+    .b1{background:linear-gradient(135deg,#7dd3fc44,#60a5fa22);color:#04263a}
+    .b2{background:linear-gradient(135deg,#fbcfe844,#fda4af22);color:#2b021f}
+    .b3{background:linear-gradient(135deg,#bbf7d044,#86efac22);color:#042614}
+    .b4{background:linear-gradient(135deg,#fde68a44,#fb923c22);color:#2b1600}
+
+    /* Small panel to view list */
+    .list-panel{margin-top:14px;background:rgba(255,255,255,0.02);padding:10px;border-radius:10px;max-height:220px;overflow:auto}
+    .entry{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.02);font-size:13px}
+    .entry time{color:var(--muted);display:block;font-size:12px}
+
+    .hint{color:var(--muted);font-size:13px;margin-top:8px}
+
+    footer{margin-top:12px;color:var(--muted);font-size:12px}
+
+    @media (max-width:600px){
+      .panel{padding:14px}
+      header h1{font-size:18px}
+    }
+  </style>
 </head>
 <body>
-<div id="toggleTheme">🌓</div>
-<div id="container">
-  <div id="messages"></div>
-</div>
-<div id="inputBox">
-  <input id="feedbackInput" type="text" placeholder="Enter feedback..." />
-  <button id="submitBtn">Submit</button>
-</div>
+  <div class="bubble-layer" id="bubble-layer" aria-hidden="true"></div>
 
-<!-- Firebase -->
-<script type="module">
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <main class="app">
+    <section class="panel" role="region" aria-label="Anonymous feedback">
+      <header>
+        <div>
+          <h1>Anonymous Feedback — Bubble Wall</h1>
+          <p>Share quick, anonymous feedback. Feedback appears as bubbles in the background for 7 days.</p>
+        </div>
+      </header>
+
+      <form id="feedback-form" aria-label="feedback form">
+        <textarea id="feedback-text" placeholder="Type something kind, candid, or curious... (max 400 chars)" maxlength="400"></textarea>
+        <div class="controls">
+          <button id="submit-btn" type="submit">Submit anonymously</button>
+          <button id="clear-expired" type="button" class="muted-btn">Clear expired feedback</button>
+        </div>
+      </form>
+
+      <div class="meta">
+        <div id="count">0 feedbacks visible</div>
+        <div id="expires-info"></div>
+      </div>
+
+      <div class="list-panel" id="list-panel" aria-live="polite"></div>
+
+      <div class="hint">Tip: Hover any bubble to read full feedback. Bubbles are randomly positioned and sized for a playful background.</div>
+      <footer>Stored locally in your browser and expires automatically 7 days after submission.</footer>
+    </section>
+  </main>
 
   <script>
-    /* ------------------ FIREBASE SETUP ------------------ */
+       /* ------------------ FIREBASE SETUP ------------------ */
     // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
   // TODO: Add SDKs for Firebase products that you want to use
@@ -63,66 +153,182 @@
   const db = getDatabase(app);
   const fbRef = ref(db, "feedback");
 
-  const messagesDiv = document.getElementById("messages");
-  const input = document.getElementById("feedbackInput");
-  const btn = document.getElementById("submitBtn");
+    /* Storage key and settings */
+    const STORAGE_KEY = 'anonymous_feedback_bubbles_v1';
+    const TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
 
-  // Auto-delete older than 7 days
-  async function autoDelete() {
-    const snap = await get(fbRef);
-    if (!snap.exists()) return;
+    // Utilities
+    const now = () => Date.now();
+    const uid = () => Math.random().toString(36).slice(2,9);
 
-    const now = Date.now();
-    const week = 7 * 24 * 60 * 60 * 1000;
+    function loadFeedbacks(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return [];
+        const arr = JSON.parse(raw);
+        if(!Array.isArray(arr)) return [];
+        // filter out expired
+        const live = arr.filter(e => (now() - e.ts) <= TTL_MS);
+        // if some expired, save cleaned
+        if(live.length !== arr.length) saveFeedbacks(live);
+        return live.sort((a,b)=>b.ts - a.ts);
+      }catch(e){console.error('load error', e); return []}
+    }
 
-    snap.forEach(child => {
-      if (now - child.val().timestamp > week) {
-        remove(ref(db, "feedback/" + child.key));
+    function saveFeedbacks(arr){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+    }
+
+    function addFeedback(text){
+      const arr = loadFeedbacks();
+      arr.push({id:uid(), text:text.trim(), ts: now()});
+      saveFeedbacks(arr);
+      return arr;
+    }
+
+    function clearExpired(){
+      const arr = loadFeedbacks();
+      saveFeedbacks(arr); // loadFeedbacks already removed expired
+      renderAll();
+    }
+
+    // Rendering bubbles
+    const bubbleLayer = document.getElementById('bubble-layer');
+    function randomBetween(min,max){return Math.random()*(max-min)+min}
+
+    function createBubbleEl(item, index, total){
+      const el = document.createElement('div');
+      el.className = 'bubble b'+((index%4)+1);
+      // random size and position
+      const vw = window.innerWidth; const vh = window.innerHeight;
+      const w = Math.round(randomBetween(80, Math.min(360, vw*0.28)));
+      const h = Math.round(randomBetween(40, 120));
+      // position but keep within viewport
+      const left = Math.round(randomBetween(4, vw - w - 20));
+      const top = Math.round(randomBetween(4, vh - h - 20));
+      el.style.width = w + 'px';
+      el.style.height = h + 'px';
+      el.style.left = left + 'px';
+      el.style.top = top + 'px';
+      el.style.fontSize = Math.min(15, Math.max(11, Math.round(w/20))) + 'px';
+      el.style.opacity = (0.8 - Math.min(0.5, index/ (total*1.4))).toFixed(2);
+
+      // show truncated text by default
+      const trunc = document.createElement('span'); trunc.className = 'trunc';
+      trunc.textContent = truncateText(item.text, 40);
+      const full = document.createElement('div'); full.className = 'full'; full.textContent = item.text;
+
+      el.appendChild(trunc); el.appendChild(full);
+
+      // show timestamp on hover as title
+      const age = now() - item.ts;
+      const days = Math.floor(age / (24*60*60*1000));
+      const date = new Date(item.ts).toLocaleString();
+      el.title = `Submitted: ${date} (${days} day${days!==1?'s':''} ago)`;
+
+      // subtle floating animation
+      const dur = randomBetween(8,20);
+      el.style.animation = `float ${dur}s ease-in-out ${Math.random()*3}s infinite`; 
+
+      return el;
+    }
+
+    function truncateText(s, n){
+      if(!s) return '';
+      return s.length>n? s.slice(0,n-1)+'…' : s;
+    }
+
+    function renderBubbles(arr){
+      bubbleLayer.innerHTML = '';
+      if(!arr.length) return;
+      // create up to 70 bubbles to avoid slowdown (but show all in list)
+      const max = Math.min(arr.length, 70);
+      // shuffle copy so bubbles are scattered each reload
+      const shuffled = arr.slice().sort(()=>Math.random()-0.5);
+      for(let i=0;i<max;i++){
+        const el = createBubbleEl(shuffled[i], i, max);
+        bubbleLayer.appendChild(el);
       }
+    }
+
+    // small keyframes inserted dynamically
+    const styleSheet = document.createElement('style');
+    styleSheet.innerHTML = `@keyframes float {0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}`;
+    document.head.appendChild(styleSheet);
+
+    // List panel rendering
+    const listPanel = document.getElementById('list-panel');
+    function renderList(arr){
+      listPanel.innerHTML = '';
+      if(!arr.length){ listPanel.textContent = 'No feedback yet.'; return }
+      arr.forEach(item=>{
+        const div = document.createElement('div'); div.className='entry';
+        const t = document.createElement('div'); t.textContent = item.text;
+        const tm = document.createElement('time'); tm.textContent = new Date(item.ts).toLocaleString();
+        div.appendChild(t); div.appendChild(tm);
+        listPanel.appendChild(div);
+      })
+    }
+
+    function renderCount(arr){
+      const count = arr.length;
+      document.getElementById('count').textContent = `${count} feedback${count!==1?'s':''} visible`;
+      // show earliest expiry info
+      if(count>0){
+        const soonest = Math.min(...arr.map(a=>a.ts));
+        const expiresAt = new Date(soonest + TTL_MS);
+        document.getElementById('expires-info').textContent = `Oldest expires: ${expiresAt.toLocaleDateString()}`;
+      }else document.getElementById('expires-info').textContent = '';
+    }
+
+    function renderAll(){
+      const arr = loadFeedbacks();
+      renderBubbles(arr);
+      renderList(arr);
+      renderCount(arr);
+    }
+
+    // form actions
+    const form = document.getElementById('feedback-form');
+    const textarea = document.getElementById('feedback-text');
+    form.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const text = textarea.value.trim();
+      if(!text){ alert('Please type some feedback before submitting.'); return }
+      addFeedback(text);
+      textarea.value = '';
+      // re-render
+      renderAll();
+      // small visual feedback
+      const btn = document.getElementById('submit-btn');
+      btn.textContent='Submitted ✓';
+      setTimeout(()=>btn.textContent='Submit anonymously', 1400);
     });
-  }
-  autoDelete();
 
-  // Submit
-  btn.addEventListener("click", () => {
-    const text = input.value.trim();
-    if (text === "") return;
-
-    push(fbRef, {
-      text: text,
-      timestamp: Date.now()
+    document.getElementById('clear-expired').addEventListener('click', ()=>{
+      clearExpired();
+      alert('Expired feedback cleared (if any).');
     });
 
-    input.value = "";
-  });
+    // initialization
+    renderAll();
 
-  // Display messages
-  onValue(fbRef, (snapshot) => {
-    messagesDiv.innerHTML = "";
-    snapshot.forEach(child => {
-      const data = child.val();
-      const msg = document.createElement("div");
-      msg.className = "msg fade-in";
+    // Periodically clean expired (every hour) while site is open
+    setInterval(()=>{
+      clearExpired();
+    }, 60*60*1000);
 
-      msg.innerHTML = `
-        <div class="avatar"></div>
-        <div>${data.text}</div>
-      `;
-
-      messagesDiv.appendChild(msg);
+    // Reposition bubbles on resize
+    let resizeTimer;
+    window.addEventListener('resize', ()=>{
+      clearTimeout(resizeTimer); resizeTimer = setTimeout(()=>renderAll(), 400);
     });
-  });
 
-  // Theme toggle
-  const toggle = document.getElementById("toggleTheme");
-  toggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-    toggle.classList.add("spin");
-    setTimeout(() => toggle.classList.remove("spin"), 600);
-  });
-</script>
+    // Accessibility: allow pressing Ctrl+Enter to submit
+    textarea.addEventListener('keydown', (ev)=>{ if(ev.ctrlKey && ev.key==='Enter') form.requestSubmit(); });
+
+    // initial sample (only if no feedback at all) - commented out to keep site empty by default
+    // if(!loadFeedbacks().length){ addFeedback('Welcome — leave anonymous feedback!') }
+  </script>
 </body>
 </html>
-
-
-
