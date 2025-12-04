@@ -59,11 +59,6 @@
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const messagesRef = db.ref("messages");
-
-
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const fbRef = ref(db, "feedback");
@@ -128,5 +123,6 @@
 </script>
 </body>
 </html>
+
 
 
