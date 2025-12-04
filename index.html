@@ -6,9 +6,14 @@
   <title>Anonymous Feedback Wall</title>
 
   <style>
+    /* ------------------ GLOBAL ANIM TRANSITIONS ------------------ */
+    * {
+      transition: background 0.5s ease, color 0.5s ease, filter 0.5s ease;
+    }
+
     /* ------------------ THEME VARIABLES ------------------ */
     :root {
-      --bg: linear-gradient(135deg,#cce7f6,#e8f4fa); /* eye soothing light background */
+      --bg: linear-gradient(135deg,#cce7f6,#e8f4fa);
       --card: rgba(255,255,255,0.7);
       --accent: #0ea5e9;
       --bubble: #ffffff;
@@ -17,7 +22,7 @@
     }
 
     /* Dark Theme */
-    .light {
+    .dark {
       --bg: #0f1724;
       --card: #0b1220;
       --accent: #06b6d4;
@@ -26,8 +31,6 @@
       --glass: rgba(255,255,255,0.05);
     }
 
-    /* ------------------------------------------------------ */
-
     html,body{
       height:100%;
       margin:0;
@@ -35,7 +38,6 @@
       background: var(--bg);
       background-size: cover;
       color: var(--text);
-      transition: background .4s, color .3s;
     }
 
     .wrap{
@@ -64,9 +66,9 @@
       cursor:pointer;
       backdrop-filter: blur(6px);
       border: 1px solid rgba(255,255,255,0.25);
-      transition:0.2s;
       color: var(--text);
     }
+
     .toggle-btn:hover{
       background: var(--accent);
       color: #000;
@@ -100,8 +102,8 @@
       border:none;
       font-weight:600;
       cursor:pointer;
-      transition:0.2s;
     }
+
     .submit-btn:hover{opacity:0.8}
 
     /* ================= WALL BELOW INPUT ================= */
@@ -112,7 +114,6 @@
       min-height:420px;
       box-shadow:0 4px 18px rgba(0,0,0,0.1);
       overflow:auto;
-      transition: background .3s;
       backdrop-filter: blur(6px);
     }
 
@@ -120,7 +121,7 @@
       display:flex;
       gap:12px;
       margin-bottom:12px;
-      animation:pop .45s forwards;
+      animation:pop 0.45s forwards;
     }
 
     @keyframes pop{
@@ -153,14 +154,12 @@
       <button class="toggle-btn" id="themeToggle">Toggle Dark/Light</button>
     </header>
 
-    <!-- INPUT BOX MOVED ABOVE WALL -->
     <div class="composer">
       <div class="avatar"></div>
       <input id="input" type="text" placeholder="Write comment…" maxlength="300" />
       <button class="submit-btn" id="submitBtn">Submit</button>
     </div>
 
-    <!-- WALL BELOW -->
     <main class="wall" id="wall"></main>
 
   </div>
@@ -170,7 +169,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-  // Import the functions you need from the SDKs you need
+    /* ------------------ FIREBASE SETUP ------------------ */
+    // Import the functions you need from the SDKs you need
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
   // TODO: Add SDKs for Firebase products that you want to use
   // https://firebase.google.com/docs/web/setup#available-libraries
@@ -199,17 +199,33 @@
 
     const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
+    /* ------------------ AUTO DELETE OLD MESSAGES ------------------ */
+    function cleanupOldMessages() {
+      const expiry = Date.now() - SEVEN_DAYS_MS;
+
+      messagesRef
+        .orderByChild("ts")
+        .endAt(expiry)
+        .once("value", snapshot => {
+          snapshot.forEach(child => {
+            child.ref.remove(); // delete from Firebase permanently
+          });
+        });
+    }
+
+    cleanupOldMessages(); // runs automatically every time page loads
+
     /* ------------------ THEME LOGIC ------------------ */
     function applyTheme(theme) {
-      document.body.classList.toggle("light", theme === "dark");
+      document.body.classList.toggle("dark", theme === "dark");
       localStorage.setItem("theme", theme);
     }
 
-    const savedTheme = localStorage.getItem("theme") || "light"; // default soothing
+    const savedTheme = localStorage.getItem("theme") || "light";
     applyTheme(savedTheme);
 
     themeToggle.addEventListener("click", () => {
-      const newTheme = document.body.classList.contains("light") ? "light" : "dark";
+      const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
       applyTheme(newTheme);
     });
 
@@ -251,9 +267,8 @@
     }
 
     messagesRef.on("value", snapshot => {
-      const data = snapshot.val() || {};
       wall.innerHTML = "";
-
+      const data = snapshot.val() || {};
       const entries = Object.entries(data).sort((a, b) => b[1].ts - a[1].ts);
 
       for (const [key, msg] of entries) {
@@ -264,6 +279,5 @@
   </script>
 </body>
 </html>
-
 
 
