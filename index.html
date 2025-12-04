@@ -8,24 +8,22 @@
   <style>
     /* ------------------ THEME VARIABLES ------------------ */
     :root {
+      --bg: linear-gradient(135deg,#cce7f6,#e8f4fa); /* eye soothing light background */
+      --card: rgba(255,255,255,0.7);
+      --accent: #0ea5e9;
+      --bubble: #ffffff;
+      --text: #0f172a;
+      --glass: rgba(255,255,255,0.35);
+    }
+
+    /* Dark Theme */
+    .light {
       --bg: #0f1724;
       --card: #0b1220;
       --accent: #06b6d4;
       --bubble: #111827;
       --text: #e6eef6;
-      --muted: #94a3b8;
-      --glass: rgba(255,255,255,0.03);
-    }
-
-    /* Light Theme Overrides */
-    .light {
-      --bg: #f2f6fa;
-      --card: #ffffff;
-      --accent: #0ea5e9;
-      --bubble: #e2e8f0;
-      --text: #0f172a;
-      --muted: #475569;
-      --glass: rgba(0,0,0,0.05);
+      --glass: rgba(255,255,255,0.05);
     }
 
     /* ------------------------------------------------------ */
@@ -35,19 +33,28 @@
       margin:0;
       font-family:Inter, sans-serif;
       background: var(--bg);
+      background-size: cover;
       color: var(--text);
-      transition: background .3s, color .3s;
+      transition: background .4s, color .3s;
     }
 
-    .wrap{max-width:900px;margin:32px auto;padding:20px;display:flex;flex-direction:column;gap:18px}
+    .wrap{
+      max-width:900px;
+      margin:32px auto;
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
 
     header{
       display:flex;
       justify-content:space-between;
       align-items:center;
+      margin-bottom: 12px;
     }
 
-    h1{margin:0;font-size:22px}
+    h1{margin:0;font-size:24px;font-weight:700}
 
     .toggle-btn {
       background: var(--glass);
@@ -55,7 +62,8 @@
       border-radius: 20px;
       font-size: 14px;
       cursor:pointer;
-      border: 1px solid rgba(255,255,255,0.15);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255,255,255,0.25);
       transition:0.2s;
       color: var(--text);
     }
@@ -64,18 +72,61 @@
       color: #000;
     }
 
+    /* ================= INPUT BOX AT TOP ================= */
+    .composer{
+      display:flex;
+      gap:12px;
+      padding:14px;
+      background:var(--glass);
+      border-radius: 14px;
+      align-items:center;
+      backdrop-filter: blur(6px);
+    }
+
+    .composer input{
+      flex:1;
+      border:0;
+      background:transparent;
+      color:var(--text);
+      font-size:17px;
+      outline:none;
+    }
+
+    .submit-btn{
+      padding:10px 20px;
+      background:var(--accent);
+      color:#000;
+      border-radius:40px;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+      transition:0.2s;
+    }
+    .submit-btn:hover{opacity:0.8}
+
+    /* ================= WALL BELOW INPUT ================= */
     .wall{
       background: var(--card);
       border-radius:12px;
       padding:18px;
       min-height:420px;
-      box-shadow:0 8px 30px rgba(2,6,23,0.4);
+      box-shadow:0 4px 18px rgba(0,0,0,0.1);
       overflow:auto;
       transition: background .3s;
+      backdrop-filter: blur(6px);
     }
 
-    .msg-row{display:flex;gap:12px;margin-bottom:12px;animation:pop .45s forwards}
-    @keyframes pop{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .msg-row{
+      display:flex;
+      gap:12px;
+      margin-bottom:12px;
+      animation:pop .45s forwards;
+    }
+
+    @keyframes pop{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:none}
+    }
 
     .avatar{
       width:44px;height:44px;border-radius:50%;
@@ -88,94 +139,59 @@
       padding:12px 14px;
       border-radius:12px;
       max-width:75%;
-      transition: background .3s;
+      color: var(--text);
+      box-shadow:0 2px 6px rgba(0,0,0,0.08);
     }
-
-    .composer{
-      display:flex;gap:12px;
-      padding:12px;
-      background:var(--glass);
-      border-radius:999px;
-      align-items:center;
-      transition: background .3s;
-    }
-
-    .composer input{
-      flex:1;
-      border:0;
-      background:transparent;
-      color:var(--text);
-      font-size:16px;
-      outline:none;
-    }
-
-    .submit-btn{
-      padding:10px 18px;
-      background:var(--accent);
-      color:#000;
-      border-radius:40px;
-      border:none;
-      font-weight:600;
-      cursor:pointer;
-      transition:0.2s;
-    }
-    .submit-btn:hover{opacity:0.8}
-
   </style>
 </head>
 
 <body>
   <div class="wrap">
+
     <header>
       <h1>Anonymous Feedback Wall</h1>
-
-      <!-- THEME TOGGLE BUTTON -->
       <button class="toggle-btn" id="themeToggle">Toggle Dark/Light</button>
     </header>
 
-    <main class="wall" id="wall"></main>
-
+    <!-- INPUT BOX MOVED ABOVE WALL -->
     <div class="composer">
       <div class="avatar"></div>
-      <input id="input" type="text" placeholder="Write comment… (Enter or Submit)" maxlength="300" />
+      <input id="input" type="text" placeholder="Write comment…" maxlength="300" />
       <button class="submit-btn" id="submitBtn">Submit</button>
     </div>
+
+    <!-- WALL BELOW -->
+    <main class="wall" id="wall"></main>
+
   </div>
 
   <!-- Firebase -->
-  /*<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>*/
- /* <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>*/
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
   <script>
-   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-analytics.js";
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
   // TODO: Add SDKs for Firebase products that you want to use
   // https://firebase.google.com/docs/web/setup#available-libraries
 
   // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
-    apiKey: "AIzaSyD-7Dd5TOxTwyUgmnaViVIudKDqY9DYpWQ",
-    authDomain: "feedback-e2f83.firebaseapp.com",
-    databaseURL: "https://feedback-e2f83-default-rtdb.firebaseio.com",
-    projectId: "feedback-e2f83",
-    storageBucket: "feedback-e2f83.firebasestorage.app",
-    messagingSenderId: "196634005382",
-    appId: "1:196634005382:web:549b0db19c3ad84345a607",
-    measurementId: "G-CN4NBJE5XP"
+    apiKey: "AIzaSyDIL9LBRTE9kcpBsL1sGjC4qdSTh1IbYUk",
+    authDomain: "backend-learning-feedback.firebaseapp.com",
+    projectId: "backend-learning-feedback",
+    storageBucket: "backend-learning-feedback.firebasestorage.app",
+    messagingSenderId: "696229938614",
+    appId: "1:696229938614:web:63f07549dc86baa90ced17"
   };
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);  
-
-
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const messagesRef = db.ref("messages");
 
-    /* ------------------ DOM ELEMENTS ------------------ */
     const input = document.getElementById("input");
     const submitBtn = document.getElementById("submitBtn");
     const wall = document.getElementById("wall");
@@ -185,21 +201,19 @@
 
     /* ------------------ THEME LOGIC ------------------ */
     function applyTheme(theme) {
-      document.body.classList.toggle("light", theme === "light");
+      document.body.classList.toggle("light", theme === "dark");
       localStorage.setItem("theme", theme);
     }
 
-    // Load saved theme on startup
-    const savedTheme = localStorage.getItem("theme") || "dark";
+    const savedTheme = localStorage.getItem("theme") || "light"; // default soothing
     applyTheme(savedTheme);
 
     themeToggle.addEventListener("click", () => {
-      const newTheme = document.body.classList.contains("light") ? "dark" : "light";
+      const newTheme = document.body.classList.contains("light") ? "light" : "dark";
       applyTheme(newTheme);
     });
 
-    /* ------------------ MESSAGE SUBMISSION ------------------ */
-
+    /* ------------------ SEND MESSAGE ------------------ */
     function submitMessage() {
       const text = input.value.trim();
       if (!text) return;
@@ -208,7 +222,6 @@
       input.value = "";
     }
 
-    // Submit on ENTER
     input.addEventListener("keydown", e => {
       if (e.key === "Enter") {
         e.preventDefault();
@@ -216,11 +229,9 @@
       }
     });
 
-    // Submit on button click
     submitBtn.addEventListener("click", submitMessage);
 
-    /* ------------------ RENDERING ------------------ */
-
+    /* ------------------ RENDER ------------------ */
     function renderMessage(key, msg) {
       if (Date.now() - msg.ts > SEVEN_DAYS_MS) return;
 
@@ -249,10 +260,7 @@
         const el = renderMessage(key, msg);
         if (el) wall.appendChild(el);
       }
-
-      wall.scrollTop = 0;
     });
-
   </script>
 </body>
 </html>
