@@ -1,170 +1,41 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Anonymous Feedback Wall</title>
-
-  <style>
-    /* ------------------ GLOBAL ANIM TRANSITIONS ------------------ */
-    * {
-      transition: background 0.5s ease, color 0.5s ease, filter 0.5s ease;
-    }
-
-    /* ------------------ THEME VARIABLES ------------------ */
-    :root {
-      --bg: linear-gradient(135deg,#cce7f6,#e8f4fa);
-      --card: rgba(255,255,255,0.7);
-      --accent: #0ea5e9;
-      --bubble: #ffffff;
-      --text: #0f172a;
-      --glass: rgba(255,255,255,0.35);
-    }
-
-    /* Dark Theme */
-    .dark {
-      --bg: #0f1724;
-      --card: #0b1220;
-      --accent: #06b6d4;
-      --bubble: #111827;
-      --text: #e6eef6;
-      --glass: rgba(255,255,255,0.05);
-    }
-
-    html,body{
-      height:100%;
-      margin:0;
-      font-family:Inter, sans-serif;
-      background: var(--bg);
-      background-size: cover;
-      color: var(--text);
-    }
-
-    .wrap{
-      max-width:900px;
-      margin:32px auto;
-      padding:20px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-    }
-
-    header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom: 12px;
-    }
-
-    h1{margin:0;font-size:24px;font-weight:700}
-
-    .toggle-btn {
-      background: var(--glass);
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      cursor:pointer;
-      backdrop-filter: blur(6px);
-      border: 1px solid rgba(255,255,255,0.25);
-      color: var(--text);
-    }
-
-    .toggle-btn:hover{
-      background: var(--accent);
-      color: #000;
-    }
-
-    /* ================= INPUT BOX AT TOP ================= */
-    .composer{
-      display:flex;
-      gap:12px;
-      padding:14px;
-      background:var(--glass);
-      border-radius: 14px;
-      align-items:center;
-      backdrop-filter: blur(6px);
-    }
-
-    .composer input{
-      flex:1;
-      border:0;
-      background:transparent;
-      color:var(--text);
-      font-size:17px;
-      outline:none;
-    }
-
-    .submit-btn{
-      padding:10px 20px;
-      background:var(--accent);
-      color:#000;
-      border-radius:40px;
-      border:none;
-      font-weight:600;
-      cursor:pointer;
-    }
-
-    .submit-btn:hover{opacity:0.8}
-
-    /* ================= WALL BELOW INPUT ================= */
-    .wall{
-      background: var(--card);
-      border-radius:12px;
-      padding:18px;
-      min-height:420px;
-      box-shadow:0 4px 18px rgba(0,0,0,0.1);
-      overflow:auto;
-      backdrop-filter: blur(6px);
-    }
-
-    .msg-row{
-      display:flex;
-      gap:12px;
-      margin-bottom:12px;
-      animation:pop 0.45s forwards;
-    }
-
-    @keyframes pop{
-      from{opacity:0;transform:translateY(10px)}
-      to{opacity:1;transform:none}
-    }
-
-    .avatar{
-      width:44px;height:44px;border-radius:50%;
-      background:linear-gradient(180deg,var(--accent),#3b82f6);
-      flex-shrink:0;
-    }
-
-    .bubble{
-      background: var(--bubble);
-      padding:12px 14px;
-      border-radius:12px;
-      max-width:75%;
-      color: var(--text);
-      box-shadow:0 2px 6px rgba(0,0,0,0.08);
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Anonymous Feedback Wall</title>
+<style>
+  body { font-family: "Segoe UI", sans-serif; margin:0; padding:0; background:#f1f1f1; transition: background 0.4s, color 0.4s; }
+  .dark { background:#121212; color:#e4e4e4; }
+  #container { max-width:600px; margin:40px auto; padding:20px; }
+  #messages { display:flex; flex-direction:column; gap:12px; margin-bottom:70px; }
+  .msg { display:flex; align-items:flex-start; padding:10px 14px; border-radius:14px; background:white; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+  .dark .msg { background:#1e1e1e; }
+  .avatar { width:40px; height:40px; border-radius:50%; background:#888; margin-right:10px; }
+  #inputBox { position:fixed; bottom:0; left:0; right:0; padding:12px; background:white; box-shadow:0 -2px 5px rgba(0,0,0,0.2); }
+  .dark #inputBox { background:#1e1e1e; }
+  #feedbackInput { width:80%; padding:12px; border-radius:20px; border:none; outline:none; }
+  #submitBtn { padding:12px 18px; border:none; border-radius:20px; background:#2a72ff; color:white; cursor:pointer; margin-left:8px; }
+  #toggleTheme { position:fixed; top:20px; right:20px; cursor:pointer; padding:10px; border-radius:8px; background:#ddd; }
+  .dark #toggleTheme { background:#333; color:white; }
+  @keyframes fade { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform:translateY(0);} }
+  .fade-in { animation: fade 0.4s ease; }
+  @keyframes themeSwitch { 0%{transform:rotate(0deg);} 100%{transform:rotate(360deg);} }
+  .spin { animation: themeSwitch 0.5s linear; }
+</style>
 </head>
-
 <body>
-  <div class="wrap">
+<div id="toggleTheme">🌓</div>
+<div id="container">
+  <div id="messages"></div>
+</div>
+<div id="inputBox">
+  <input id="feedbackInput" type="text" placeholder="Enter feedback..." />
+  <button id="submitBtn">Submit</button>
+</div>
 
-    <header>
-      <h1>Anonymous Feedback Wall</h1>
-      <button class="toggle-btn" id="themeToggle">Toggle Dark/Light</button>
-    </header>
-
-    <div class="composer">
-      <div class="avatar"></div>
-      <input id="input" type="text" placeholder="Write comment…" maxlength="300" />
-      <button class="submit-btn" id="submitBtn">Submit</button>
-    </div>
-
-    <main class="wall" id="wall"></main>
-
-  </div>
-
-  <!-- Firebase -->
+<!-- Firebase -->
+<script type="module">
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
@@ -192,91 +63,69 @@
     const db = firebase.database();
     const messagesRef = db.ref("messages");
 
-    const input = document.getElementById("input");
-    const submitBtn = document.getElementById("submitBtn");
-    const wall = document.getElementById("wall");
-    const themeToggle = document.getElementById("themeToggle");
 
-    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const fbRef = ref(db, "feedback");
 
-    /* ------------------ AUTO DELETE OLD MESSAGES ------------------ */
-    function cleanupOldMessages() {
-      const expiry = Date.now() - SEVEN_DAYS_MS;
+  const messagesDiv = document.getElementById("messages");
+  const input = document.getElementById("feedbackInput");
+  const btn = document.getElementById("submitBtn");
 
-      messagesRef
-        .orderByChild("ts")
-        .endAt(expiry)
-        .once("value", snapshot => {
-          snapshot.forEach(child => {
-            child.ref.remove(); // delete from Firebase permanently
-          });
-        });
-    }
+  // Auto-delete older than 7 days
+  async function autoDelete() {
+    const snap = await get(fbRef);
+    if (!snap.exists()) return;
 
-    cleanupOldMessages(); // runs automatically every time page loads
+    const now = Date.now();
+    const week = 7 * 24 * 60 * 60 * 1000;
 
-    /* ------------------ THEME LOGIC ------------------ */
-    function applyTheme(theme) {
-      document.body.classList.toggle("dark", theme === "dark");
-      localStorage.setItem("theme", theme);
-    }
-
-    const savedTheme = localStorage.getItem("theme") || "light";
-    applyTheme(savedTheme);
-
-    themeToggle.addEventListener("click", () => {
-      const newTheme = document.body.classList.contains("dark") ? "light" : "dark";
-      applyTheme(newTheme);
-    });
-
-    /* ------------------ SEND MESSAGE ------------------ */
-    function submitMessage() {
-      const text = input.value.trim();
-      if (!text) return;
-
-      messagesRef.push({ text, ts: Date.now() });
-      input.value = "";
-    }
-
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        submitMessage();
+    snap.forEach(child => {
+      if (now - child.val().timestamp > week) {
+        remove(ref(db, "feedback/" + child.key));
       }
     });
+  }
+  autoDelete();
 
-    submitBtn.addEventListener("click", submitMessage);
+  // Submit
+  btn.addEventListener("click", () => {
+    const text = input.value.trim();
+    if (text === "") return;
 
-    /* ------------------ RENDER ------------------ */
-    function renderMessage(key, msg) {
-      if (Date.now() - msg.ts > SEVEN_DAYS_MS) return;
-
-      const row = document.createElement("div");
-      row.className = "msg-row";
-
-      const avatar = document.createElement("div");
-      avatar.className = "avatar";
-
-      const bubble = document.createElement("div");
-      bubble.className = "bubble";
-      bubble.textContent = msg.text;
-
-      row.appendChild(avatar);
-      row.appendChild(bubble);
-      return row;
-    }
-
-    messagesRef.on("value", snapshot => {
-      wall.innerHTML = "";
-      const data = snapshot.val() || {};
-      const entries = Object.entries(data).sort((a, b) => b[1].ts - a[1].ts);
-
-      for (const [key, msg] of entries) {
-        const el = renderMessage(key, msg);
-        if (el) wall.appendChild(el);
-      }
+    push(fbRef, {
+      text: text,
+      timestamp: Date.now()
     });
-  </script>
+
+    input.value = "";
+  });
+
+  // Display messages
+  onValue(fbRef, (snapshot) => {
+    messagesDiv.innerHTML = "";
+    snapshot.forEach(child => {
+      const data = child.val();
+      const msg = document.createElement("div");
+      msg.className = "msg fade-in";
+
+      msg.innerHTML = `
+        <div class="avatar"></div>
+        <div>${data.text}</div>
+      `;
+
+      messagesDiv.appendChild(msg);
+    });
+  });
+
+  // Theme toggle
+  const toggle = document.getElementById("toggleTheme");
+  toggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+    toggle.classList.add("spin");
+    setTimeout(() => toggle.classList.remove("spin"), 600);
+  });
+</script>
 </body>
 </html>
 
