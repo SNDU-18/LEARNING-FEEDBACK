@@ -149,13 +149,15 @@
   <script>
     /* ------------------ FIREBASE CONFIG ------------------ */
     const firebaseConfig = {
-      apiKey: "AIzaSyCD8zUiV0Euu1Dr6WUNkagNNFun2yhXW0I",
-      authDomain: "feedback-wall-ead79.firebaseapp.com",
-      projectId: "feedback-wall-ead79",
-      storageBucket: "feedback-wall-ead79.firebasestorage.app",
-      messagingSenderId: "2306691032",
-      appId: "1:2306691032:web:8bd9cadd4be9ba9090acad"
-    };
+    apiKey: "AIzaSyCD8zUiV0Euu1Dr6WUNkagNNFun2yhXW0I",
+    authDomain: "feedback-wall-ead79.firebaseapp.com",
+    databaseURL: "https://feedback-wall-ead79-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "feedback-wall-ead79",
+    storageBucket: "feedback-wall-ead79.firebasestorage.app",
+    messagingSenderId: "2306691032",
+    appId: "1:2306691032:web:8bd9cadd4be9ba9090acad"
+  };
+
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -242,3 +244,4 @@
   </script>
 </body>
 </html>
+
