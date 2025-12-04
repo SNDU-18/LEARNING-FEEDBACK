@@ -130,29 +130,6 @@
   </main>
 
   <script>
-       /* ------------------ FIREBASE SETUP ------------------ */
-    // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyDIL9LBRTE9kcpBsL1sGjC4qdSTh1IbYUk",
-    authDomain: "backend-learning-feedback.firebaseapp.com",
-    projectId: "backend-learning-feedback",
-    storageBucket: "backend-learning-feedback.firebasestorage.app",
-    messagingSenderId: "696229938614",
-    appId: "1:696229938614:web:63f07549dc86baa90ced17"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const fbRef = ref(db, "feedback");
-
     /* Storage key and settings */
     const STORAGE_KEY = 'anonymous_feedback_bubbles_v1';
     const TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days in ms
@@ -332,3 +309,5 @@
   </script>
 </body>
 </html>
+
+
